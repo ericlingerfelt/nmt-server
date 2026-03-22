@@ -1,2 +1,1 @@
-# nmt
-The Nuclear Masses Toolkit
+Nuclear Masses Toolkit Server
