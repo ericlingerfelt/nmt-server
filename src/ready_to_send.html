@@ -1,0 +1,181 @@
+<?php
+  /* vim: set filetype=php: */
+
+/**************************************************************************/
+/*!
+* This file prepares an email and asks for it to be sent. It is driven 
+* by the output from prep_to_send.html. 
+*
+* Changed this so that the body is sent in from the registration handler
+* function. This is so that the user can preview it before it is sent. It
+* should even be editable. But I also had to remove the \tbl{\\r} (carriage
+* returns) that the web browser put in. How nasty is that?
+*
+* \input The data it needs is all from the $_POST array.
+*
+*****************************************************************************/
+  include_once("admin_functions.inc");
+  //$array= explode('/',$_SERVER['PHP_SELF']); 
+  //$ar=$array[count($array)-2];
+  if(($rtn=auth_validate("mass_model")) !== true ) 
+  {
+    // not going to print the errors unless testing
+    // as long as the php is correct all the other errors will
+    // be hidden
+    header('WWW-Authenticate: Basic realm="CINA_ADMIN"');
+    echo "<html><head><title>Not Authorized</title></head><body>";
+    echo "ERROR: 401 Authorization required<br><hr>";
+    echo "</body></html>";
+    exit(1);
+  }
+  echo "<html>";
+  echo "<head><title>MassModel Registration Email</title>\n";
+  echo '<link rel="stylesheet" type="text/css" href="m_admin.css">' ."\n";
+  echo '<META http-equiv="Content-Script-Type" content="text/javascript">' ."\n";
+  echo '<script src="m_admin.js" type="text/javascript">' ."\n";
+  echo '</script>' ."\n";
+  echo "</head><body>";
+  echo "<h2>Registration Completed</h2><hr>\n";
+
+  if( 
+     array_key_exists('NAME',$_POST) &&
+     array_key_exists('USER',$_POST) &&
+     array_key_exists('BODY',$_POST) &&
+     array_key_exists('EMAIL',$_POST)) {
+    /*
+    * hack up a message ID to help disguise where  the email comes
+    * from.  Not perfect but makes it less obvious that it comes from ORNL
+    */
+    $togmt=date("O");
+    $now=date("Ymd") . (date("H") + ($togmt/100)) .date("is");
+    $now.="." . strtoupper(substr(sha1($now),1,10));
+    $now.='@nuclearmasses.org';
+    /*
+    * Set up the email and headers here.  Some of this stuff
+    * is intended to hide its origination
+    */
+    $to=$_POST['EMAIL'];
+    $hdrs= array( 'Date' => date('r'),
+      'From' => 'Coordinator<coordinator@nuclearmasses.org> ',
+      'To' => $_POST['NAME'] . "<{$_POST['EMAIL']}>",
+      'Subject' => 'Nuclear Mass Model Registration',
+      'Cc' =>'coordinator@nuclearmasses.org',
+      //Change this if you want blind copies somewhere else
+      //Or comment it out if you don't want any at all.
+      'Bcc' => 'lingerfeltej@ornl.gov,eric.lingerfelt@gmail.com,smithms@ornl.gov,xrayburst1@yahoo.com',
+      'X-Mailer' => 'PHP/' . phpversion(),
+      'Message-id' => $now
+    );
+    $patt=array("/\r/");
+    $repl=array('');
+    if(! function_exists("send_email")) {
+      include("mass_admin_handlers.inc");
+      }
+    $rtn=send_email($to,$hdrs,preg_replace($patt,$repl,$_POST['BODY']));
+    if($rtn===true) {
+      echo "Sent email to {$_POST['NAME']}<{$_POST['EMAIL']}> successfully.<br>";
+      echo "Registration is complete.<br>";
+      if(array_key_exists("REG_INDEX",$_POST)) {
+	$database_info =& get_db_info("mass_model");
+	if(! $database_info) {
+	  $err="Could not get database information for 'mass'";
+	  error_log($err);
+	  return $err;
+	  }
+	decode($database_info->password,$database_info->key); 
+
+	$mylink=mysql_connect('localhost:3306',$database_info ->username ,
+	      $database_info->password);
+	if(! $mylink) {
+	  $err="ERROR: COULD NOT CONNECT to MySQL server as ";
+	  $err.= $database_info->username . "\n";
+	  trigger_error($err,E_USER_ERROR);
+	  }
+	$rtn=mysql_query("USE $database_info->dbname");
+	if(! $rtn) {
+	  $err= "USE " . $database_info->dbname ;
+	  $err.=" query caused: MYSQL ERROR: " . mysql_error() ;
+	  $err.= "\n";
+	  trigger_error($err,E_USER_ERROR);
+	  mysql_close($mylink);
+	  }
+	$query_str="UPDATE register_requests SET complete ='";
+	$query_str.= date('Y-m-d H:i:s');
+        $query_str.="' WHERE r_index = {$_POST['REG_INDEX']}";
+	$rtn=mysql_query($query_str);
+	if(! $rtn) {
+	  $err="Could not update register_request # " . $_POST['REG_INDEX'];
+	  $err.=". Query was: $query_str<br>";
+	  if(mysql_errno() > 0) {
+	    $err.="MYSQL: " . mysql_error();
+	    }
+	  mysql_close();
+	  trigger_error($err,E_USER_ERROR);
+	  return;
+	  }
+	mysql_close();
+      }
+    }
+    elseif(is_string($rtn)) {
+      echo "Send of email unsuccessful: $rtn<br>";
+      }
+    else {
+      echo "'" . $rtn . "' was returned from send_email()<br>";
+      }
+    echo '<input type="button" value="Return to Mass Model Admin"' . "\n";
+    echo ' onclick="adminHome()">' . "<hr>\n";
+    echo "</body></html>";
+  }
+  elseif(array_key_exists('NEW_INDEX',$_POST)) {
+    $database_info =& get_db_info("mass_model");
+    if(! $database_info) {
+      $err="Could not get database information for 'mass_model'";
+      trigger_error($err,E_USER_ERROR);
+      return;
+      }
+    decode($database_info->password,$database_info->key); 
+
+    $mylink=mysql_connect('localhost:3306',$database_info ->username ,
+	  $database_info->password);
+    if(! $mylink) {
+      $err="Could not connect to MySQL server as ";
+      $err.= $database_info->username;
+      trigger_error($err,E_USER_ERROR);
+      return;
+      }
+    $rtn=mysql_query("USE $database_info->dbname");
+    if(! $rtn) {
+      $err= "USE " . $database_info->dbname ;
+      $err.=" query caused: MYSQL ERROR: " . mysql_error() ;
+      trigger_error($err,E_USER_ERROR);
+      mysql_close($mylink);
+      return;
+      }
+    $query_str="DELETE FROM accounts WHERE a_index=" . $_POST['NEW_INDEX'];
+    $rtn=mysql_query($query_str);
+    if(! $rtn) {
+      $err="Could not delete new account # " . $_POST['NEW_INDEX'];
+      $err.=" after Cancel was selected.";
+      if(mysql_errno() > 0) {
+	$err.="MYSQL: " . mysql_error();
+	}
+      mysql_close();
+      trigger_error($err,E_USER_ERROR);
+      return;
+      }
+    mysql_close();
+    echo "Send of email AND registration successfully cancelled.\n";
+    echo '<input type="button" value="Return to Mass Model Admin"';
+    echo ' onclick="adminHome()>' . "<hr>\n";
+    echo "</body></html>";
+    }
+  else {
+    $err="Missing one of NAME,USER,EMAIL or BODY<br>\n";
+    trigger_error($err,E_USER_ERROR);
+    echo '<input type="button" value="Return to Mass Model Admin"';
+    echo ' onclick="adminHome()>' . "<hr>\n";
+    echo "</body></html>";
+    }
+  return;
+
+?>

@@ -1,0 +1,106 @@
+> [1] innovative aspect
+> 
+> there is no site dedicated to nuclear masses that can offer
+> * uploading, storing, manipulation, sharing, and visualizing new  
+> experimental mass measurements
+> * uploading, storing, manipulation, sharing, and visualizing new  
+> theoretical mass models
+> * comparison of new experimental measurements with evaluated masses  
+> or theoretical models
+> * comparison of theoretical models with other models or with  
+> evaluated masses
+> * sophisticated multi-parameter analysis of theoretical models
+> * commenting on nuclear mass models and on new experimental measurements
+> * bibliographic information on experimental mass measurements and  
+> theoretical models
+> * links to obtain additional information on experimental mass  
+> measurements and theoretical models
+
+These look good to me but when I first read it I assumed you had made a mistake
+and the first two were the same. Others may as lazy reading as I am.
+
+> 
+> [2] a specific technical barrier that we will overcome
+* ?? YOUR INPUT NEEDED HERE!
+
+We are striving to provide a tool for storage, access and evaluation of mass
+models such that the users can provide their own data in any one of the several
+formats now used without having to rewrite the data files. Additionally, they
+will be able to access this from their desktops, in effectively real-time.
+
+
+What I see as our needs to implement this:
+
+  0. We need to decide what functionality this will have and the workflow
+     needed to achieve that functionality.
+
+  1. We need to define the interface (CGI) so that work can be started on 2.
+     while 3. is underway.
+
+  2. We will need to create the new GUI to handle this separately from CINA.
+     Even though some of the CINA software will be reused it may need to be
+     updated and more will undoubtedly have to be developed.
+
+  3. We will need to develop a CGI 'back-end' to handle all the data
+     storage/access/manipulation work. (The current version for handling the
+     Mass Models is just Java accessing a set of files and reading all the data
+     from the selected file(s).  Then the Java does whatever processing needs to
+     be done.)
+     
+     a) need to establish session management and user management software and
+     interfaces.
+
+     b) need to create data structures for storage. Will this be flat
+     files, binary data, database tables, or some other method yet to be named?
+
+     c) need to establish a method for uploading mass model data, including
+     establishing (a set of) format(s) for the mass model data.
+
+     c) need to establish storage for "bibliographic information on experimental
+     mass measurements and theoretical models".
+
+     d) need to establish management procedures and software for c) so that
+     users can access/search/upload/download this information.
+
+     e) will need to define methods for comparison and analysis of these models.
+     If the software is available for an initial set of these methods it will
+     need to be integrated into the CGI.
+
+     f) (optimally) there should be some method by which a user could instantiate a
+     version of their own comparison or analysis method without intervention on the
+     server maintainer's part. (A plug-in if you will.)
+     
+
+
+> [3] follow-on funding
+> * I will perhaps try to get a note from Gene Henry at DOE on this
+> 
+> [4] risk
+> * our site may work successfully, but the utilization could be minimal
+> * some technical aspects may not work out [??]
+
+The last point 3.f) from above could potentially be impossible in a reasonable
+time. Other problems will depend on the size of the input data sets and what
+"sophisticated" analysis we want to make available.
+
+> * site may work, but no funding because of European politics and / or  
+> US budget limitations
+ 
+> Comments? 
+> Especially on aspect number 2 ? 
+> What about some 'pattern recognition' software to  suggest which mass models
+do better in certain mass regions [e.g., 'more red in this area of the NZ chart
+between certain magic numbers' ] ? 
+
+This should be doable, in time, depending on the data that needs to be
+analyzed and how it relates to the charts.
+
+> Or Koura's slicer technology taken one step further ...  
+enabling selection of numerous parameters before showing the 1D plot ?
+
+I have not seen his stuff work but from what you said yesterday that may be
+reasonable providing we can get enough computing horsepower to run it.  I have
+no idea what it takes now (or how long) but we could make the problem very
+time-consuming with enough variance in the input data set.
+
+Kim

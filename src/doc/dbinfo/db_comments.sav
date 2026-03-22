@@ -1,0 +1,24 @@
+##############################################################################
+#
+# $Author: bucknerk $
+# $Id: db_comments.sav,v 1.1 2008/03/31 15:38:05 bucknerk Exp $
+#
+# $Log: db_comments.sav,v $
+# Revision 1.1  2008/03/31 15:38:05  bucknerk
+# new
+#
+#
+#
+# This is a file continaing the comments about the databases that are indexed
+# in this documentation.  This has to be updated by hand because I cannot
+# figure out how to get a "comment" to be part of a database.  It seems you
+# can comment on everything but that in MySQL.  Anyway the format is simple
+# each line starts with !, then a tab, the database name, a tab then the
+# comment.  The comment cannot contain newline characters but it can contain
+# html and its length is not really limited.  If there is no comment in here
+# then there is not one in the index.html table.  These should not have to
+# be in any specific order. Oh and completely blank lines should be skipped
+# as well.
+#
+##############################################################################
+!	models	the main Mass Model production db.

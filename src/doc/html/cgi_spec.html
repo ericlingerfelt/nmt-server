@@ -1,0 +1,478 @@
+<html>
+  <head><title>Mass Model CGI Description</title>
+    <style type="text/css">
+      tr.complete {
+	background-color: #7F7;
+      }
+      tr.pending {
+	background-color: #903;
+      }
+      tr.inwork {
+	background-color: #eff;
+      }
+      th {
+	background-color: #77f;
+	color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <hr>
+    <img src="../dbinfo/nuchart.png">
+    <hr>
+    <hr><h1>Mass Model CGI</h1> 
+    This information is for the mass model 
+    software suite. These are the CGI actions requested by the Java GUI. The CGI
+    operations are performed by scripts written in PHP which access MySQL
+    database tables.  
+    <hr><hr>
+    <p>
+    <b>NOTE:</b> The returned values from the OUTPUT column, will in general be
+    strings of the form "VALUE=xxxxxx" followed by a newline.<br>
+    <b>NOTE:</b> Items whose background is 
+    <span style="background-color:#903;color:white;">&nbsp;red&nbsp;
+    </span>&nbsp; are not currently being worked on, those whose
+    background is 
+    <span style="background-color:#eff;color:black;">&nbsp;pale blue&nbsp;
+    </span> are in work 
+    and those whose background is 
+    <span style="background-color:#7f7;">green</span> are completed.
+    </p>
+    <table width="98%" border=1 bgcolor="pink">
+      <caption><b>CGI Action descriptions</b></caption>
+      <thead>
+	<tr>
+	  <th align="center">Action</th>
+	  <th align="center">INPUT (from Java GUI)</th>
+	  <th align="center">OUTPUT (from server php)</th>
+	</tr>
+      </thead>
+      <!-- Item -->
+      <tr class="complete">
+	<td>GET_ID</td>
+	<td>
+	  <a href="#user_tag">USER</a><br>
+	  <a href="#pw_tag">PASSWORD</a>
+	</td>
+	<td>
+	  <a href="#id_tag">ID</a>
+	</td>
+      </tr>
+      <tr class="complete">
+	<td colspan="3" >
+	  This causes a new session to be started for USER. The password must be
+	  <b>SHA-1</b> encoded. The return is a unique 20 character session ID.
+       	</td>
+      </tr>
+      <!-- Item -->
+      <tr class="complete">
+	<td>LOGOUT</td>
+	<td> <a href="#id_tag">ID</a>
+	</td>
+	<td>
+	  nothing
+	</td>
+      </tr>
+      <tr class="complete">
+	<td colspan="3" >
+	  This causes the session associated with ID to be terminated. The only
+	  error possible is that the ID does not exist and rather than confuse
+	  the user, we will log that error but NOT return an error message. It
+	  also stores the ending date and time in the database.
+       	</td>
+      </tr>
+      <!-- Item -->
+      <tr class="complete">
+	<td>REGISTER_USER</td>
+	<td>
+	  <a href="#fname_tag">FIRST_NAME</a><br>
+	  <a href="#lname_tag">LAST_NAME</a><br>
+	  <a href="#email_tag">EMAIL</a><br>
+	  <a href="#inst_tag">INSTITUTION</a><br>
+	  <a href="#country_tag">COUNTRY</a><br>
+	  <a href="#address_tag">ADDRESS</a><br>
+	  <a href="#research_tag">RESEARCH</a><br>
+	  <a href="#hearof_tag">HEAR_OF_US</a><br>
+	  <a href="#info_tag">INFO</a><br>
+	</td>
+	<td>
+	  Either echo REGISTER_USER=1 or ERROR=message.
+	</td>
+      </tr>
+      <tr class="complete">
+	<td colspan="3" >
+	  This causes an email to be sent to the administrators that someone is
+	  desiring a new account. All further action is administrative.  Error
+	  is limited to missing required fields.
+       	</td>
+      </tr>
+      <!-- Item -->
+
+      <tr class="complete">
+	<td>CREATE_MODEL</td>
+	<td><a href="#id_tag">ID</a><br>
+	  <a href="#mname_tag">MODEL_NAME</a><br>
+	  <a href="#desc_tag">DESCRIPTION</a><br>
+	  <a href="#ref_tag">REFERENCE</a><br>
+	  <a href="#field_tag">FIELD</a><br>
+      <a href="#ow_tag">OVERWRITE</a><a href="#data_tag"><br>
+      DATA</a><br>
+	</td>
+	<td>
+	  <a href="#mindex_tag">MODEL_INDEX</a>
+	</td>
+      </tr>
+      <tr class="complete">
+	<td colspan="3" > Adds a new mass model to the collection. The DESCRIPTION 
+      and REFERENCE are stored in the database and the returned MODEL_INDEX is 
+      the database (unique) index for the entry. By default, all new models are 
+      created as type USER. Once created they can be moved to SHARED by the owner 
+      but only administration can move/copy them to PUBLIC. </td>
+      </tr>
+      <!-- Item -->
+      <tr class="complete">
+	<td>ERASE_MODEL</td>
+	<td><a href="#id_tag">ID</a><br>
+	  <a href="#mindex_tag">MODEL_INDEX</a>
+	</td>
+	<td>
+	  <a href="#mindex_tag">MODEL_INDEX</a>
+	</td>
+      </tr>
+      <tr class="complete">
+	<td colspan="3" >
+	  Removes a mass model from the collection. The USER associated with ID
+	  must match the USER who created the model and the model must not be
+	  PUBLIC or SHARED.
+       	</td>
+      </tr>
+      <!-- Item -->
+      <tr class="complete">
+	<td>GET_MODELS</td>
+	<td><a href="#id_tag">ID</a><br><a href="#type_tag">TYPE</a></td>
+	<td>
+	  <a href="#mindex_tag">MODEL_INDEX</a><br>
+	  <a href="#manme_tag">MODEL_NAME</a><br>
+	  <a href="#type_tag">TYPE</a><br> 
+	  [MODEL_INDEX ...]<br>
+	</td>
+      </tr>
+      <tr class="complete">
+	<td colspan="3" >Returns all of the names of the models which match the 
+	  <a href="#type_tag">TYPE</a>. 
+	  If the requested type is <i>ALL</i> then the all the USER models
+	  will be returned as for the logged in user (of the ID) as well as all
+	  PUBLIC and SHARED models.
+       	</td>
+      </tr>
+      <!-- Item -->
+      <tr class="complete">
+	<td>COPY_MODEL_TO_SHARED</td>
+	<td><a href="#id_tag">ID</a><br><a href="#type_tag">MODEL_INDEX</a></td>
+	<td>
+	  <a href="#mindex_tag">MODEL_INDEX</a>
+	</td>
+      </tr>
+      <tr class="complete">
+	<td colspan="3" >This makes a copy of ALL of the data associated with a
+	  model and returns the MODEL_INDEX of the <b>new</b> model. The name of
+	  the old model is retained.  Name clashes are handled by the CGI.
+       	</td>
+      </tr>
+      <!-- Item -->
+      <tr class="complete">
+	<td>MERGE_MODELS</td>
+	<td><a href="#id_tag">ID</a><br>
+	  <a href="#mname_tag">MODEL_NAME</a><br>
+	  <a href="#mindices_tag">MODEL_INDICES</a><br>
+	  <a href="#ow_tag">OVERWRITE</a>
+	</td>
+	<td>
+	  <a href="#mindex_tag">MODEL_INDEX</a>
+	</td>
+      </tr>
+      <tr class="complete">
+	<td colspan="3" >This uses all of the data of the first model, and then
+	  adds to it all of the data from the subsequent models which do NOT
+	  have the same Z,N of any masses already in the 'merged' set. 
+	  Returns the MODEL_INDEX of the <b>new</b> model. 
+	  Name clashes are handled by the CGI. The description and reference
+	  will be a concatenated version of the originals and the author will be
+	  the current USER.
+       	</td>
+      </tr>
+      <!-- Item -->
+      <tr class="complete">
+	<td>GET_MODEL_DATA</td>
+	<td>
+	  <a href="#id_tag">ID</a><br>
+	  <a href="#mindices_tag">MODEL_INDICES</a>
+	</td>
+	<td>
+	  <a href="#mindex_tag">MODEL_INDEX</a><br>
+	  <a href="#data_tag">DATA</a><br>
+	  ...
+	</td>
+      </tr>
+      <tr class="complete">
+	<td colspan="3" >Returns all of the data associated with the model.
+	  In the returned data the format will be Z,N,MeV Z,N,MeV ... with NO
+	  newlines until the end no spaces between values and commas and a
+	  single space separating sets. A newline will follow the set of DATA
+	  and if there are more models then repeat MODEL_INDEX and DATA for
+	  each.
+       	</td>
+      </tr>
+      <!-- Item -->
+      <tr class="complete">
+	<td>GET_MODEL_INFO</td>
+	<td>
+	  <a href="#id_tag">ID</a><br>
+	  <a href="#mindices_tag">MODEL_INDICES</a>
+	</td>
+	<td>
+	  <a href="#mindex_tag">MODEL_INDEX</a><br>
+	  <a href="#auth_tag">AUTHOR</a><br>
+	  <a href="#desc_tag">DESCRIPTION</a><br>
+	  <a href="#ref_tag">REFERENCE</a><br>
+	  <a href="#field_tag">FIELD</a><br>
+	  ...
+	</td>
+      </tr>
+      <tr class="complete">
+	<td colspan="3" >Returns the meta data (not comments) associated with 
+	 the model(s).
+       	</td>
+      </tr>
+      <!-- Item  These next two are for comments-->
+      <tr class="pending">
+	<td> CREATE_COMMENT</td>
+	<td> 
+	  <a href="#id_tag">ID</a><br>
+	  <a href="#mindex_tag">MODEL_INDEX</a><br> 
+	  <a href="#subj_tag">SUBJECT</a><br> 
+	  <a href="#text_tag">TEXT</a>
+	</td>
+	<td>
+	  <a href="#mindex_tag">MODEL_INDEX</a><br> 
+	  <a href="#cindex_tag">COMMENT_INDEX</a>
+	</td>
+      </tr>
+      <tr class="pending">
+	<td colspan="3">Creates a COMMENT for MODEL_INDEX with
+	  SUBJECT and TEXT as its contents. The returned COMMENT_INDEX is that
+	  of the new comment.
+	</td>
+      </tr>
+      <!-- Item -->
+      <tr class="pending">
+	<td> GET_COMMENTS</td>
+	<td>
+	  <a href="#id_tag">ID</a><br>
+	  <a href="#mindex_tag">MODEL_INDEX</a><br> 
+	</td>
+	<td>
+	  MODEL_INDEX<br> 
+	  [
+	  <a href="#cindex_tag">COMMENT_INDEX</a><br>
+	  <a href="#user_tag">USER</a><br> 
+	  <a href="#date_tag">DATE</a><br>
+	  <a href="#subj_tag">SUBJECT</a><br> 
+	  <a href="#text_tag">TEXT</a>
+	  ]*</td>
+      </tr>
+      <tr class="pending">
+	<td colspan="3">Returns all of the comments associated with the
+	  MODEL_INDEX.
+	</td>
+      </tr>
+    </table>
+
+    <p>
+
+    
+<table width="98%" border=1 bgcolor="lightyellow">
+  <caption>
+  <b>CGI Property descriptions</b>
+  </caption>
+  <thead>
+    <tr> 
+      <th align="center">Property</th>
+      <th align="center">Description</th>
+      <th align="center">Pattern</th>
+    </tr>
+  </thead>
+  <tr> 
+    <td id="id_tag"> ID</td>
+    <td> Session id </td>
+    <td> ID=H48lsir8qwklnfwe90sdlkj </td>
+  </tr>
+  <tr> 
+    <td> CREATION_DATE</td>
+    <td> date and time of the creation of an object</td>
+    <td> yyyy-mm-dd hh:mm:ss (2007-07-01 14:12:12)</td>
+  </tr>
+  <tr> 
+    <td height="44"> MODIFICATION_DATE</td>
+    <td> date and time of the modification of an object</td>
+    <td> yyyy-mm-dd hh:mm:ss (2007-07-01 14:12:12)</td>
+  </tr>
+  <tr> 
+    <td id="data_tag"> DATA</td>
+    <td> z,n,mass excess,uncertainty&lt;space&gt;repeat</td>
+    <td>&nbsp; </td>
+  </tr>
+  <tr> 
+    <td id="mindex_tag"> MODEL_INDEX</td>
+    <td> A unique identifier for the particular model. Created when model added 
+      and stored in the database. </td>
+    <td> 123 </td>
+  </tr>
+  <tr> 
+    <td id="mindex_tag"> MODEL_INDICES</td>
+    <td> A comma separated list of MODEL_INDEX values. </td>
+    <td> 123, 456, 9987 </td>
+  </tr>
+  <tr> 
+    <td id="desc_tag"> DESCRIPTION</td>
+    <td> A description of the model under consideration. This is usually supplied 
+      when the model is 'added'</td>
+    <td>&nbsp; </td>
+  </tr>
+  <tr> 
+    <td id="ref_tag"> REFERENCE</td>
+    <td> A reference for the model under consideration. This is usually supplied 
+      when the model is 'added'. This might a URL, a publication reference or 
+      set of references or a combination.</td>
+    <td>&nbsp; </td>
+  </tr>
+  <tr> 
+    <td id="auth_tag"> AUTHOR</td>
+    <td>The Author of the model (which may or may not be different from the user). 
+    </td>
+    <td>string data like 'Michael Smith'</td>
+  </tr>
+  <tr> 
+    <td id="field_tag"> FIELD</td>
+    <td> Whether the model is from experimental data (usually very small set of 
+      data) or represents a theoretical model. </td>
+    <td> THEORY or EXPERIMENT </td>
+  </tr>
+  <!--
+      <tr>
+	<td> FILE_NAME</td>
+	<td> The name assigned to the file by the creator</td>
+	<td> [-a-zA-Z_0-9]+(.?[-a-zA-Z_0-9]+)* max length 255</td>
+      </tr>
+      <tr>
+	<td> FILE_SIZE</td>
+	<td> size of file in bytes</td>
+	<td> integer</td>
+      </tr>
+      -->
+  <tr> 
+    <td id="mname_tag"> MODEL_NAME</td>
+    <td>String identifying the model. Characters are constrained to uppercase 
+      letters and digits.</td>
+    <td>AMDC2003</td>
+  </tr>
+  <tr> 
+    <td id="type_tag"> TYPE</td>
+    <td>One of: USER, SHARED, PUBLIC, ALL</td>
+    <td><b>USER</b></td>
+  </tr>
+  <tr> 
+    <td id="user_tag"> USER</td>
+    <td>The account username</td>
+    <td>string data like 'buckner'</td>
+  </tr>
+  <tr> 
+    <td id="pw_tag"> PASSWORD</td>
+    <td>The account password</td>
+    <td>string data,SHA-1 encoded </td>
+  </tr>
+  <tr> 
+    <td id="name_tag"> NAME</td>
+    <td>The full name of a user</td>
+    <td>string data like 'Kim Buckner'</td>
+  </tr>
+  <tr> 
+    <td id="fname_tag">FIRST_NAME</td>
+    <td>The first name of a new user</td>
+    <td>string data like 'Jawaharlal'</td>
+  </tr>
+  <tr> 
+    <td id="lname_tag">LAST_NAME</td>
+    <td>The last name of a new user</td>
+    <td>string data like 'Nehru'</td>
+  </tr>
+  <tr> 
+    <td id="email_tag">EMAIL</td>
+    <td>A full email address</td>
+    <td>string data like 'stan.lee@pow.com'</td>
+  </tr>
+  <tr> 
+    <td id="inst_tag">INSTITUTION</td>
+    <td>We hope we get the University/lab they are working with</td>
+    <td>string data like 'PNNL'</td>
+  </tr>
+  <tr> 
+    <td id="country_tag">COUNTRY</td>
+    <td>The (2?) character country ID/Name; see <a
+	    href="http://www.iso.org/iso/country_codes/iso_3166_code_lists/english_country_names_and_code_elements.htm">ISO</a> 
+      for <i>official</i> list</td>
+    <td>string data like 'US'</td>
+  </tr>
+  <tr> 
+    <td id="address_tag">ADDRESS</td>
+    <td>The 'mailing' address of the user</td>
+    <td>string data like '1313 Mockingbird Lane, Mockingbird Heights, CA'</td>
+  </tr>
+  <tr> 
+    <td id="research_tag">RESEARCH</td>
+    <td>A hopefully descriptive comment on the type of research the user is doing 
+      when signing up for access.</td>
+    <td>string data like 'Atomic mass stuff'</td>
+  </tr>
+  <tr> 
+    <td id="hearof_tag">HEAR_OF_US</td>
+    <td>How the user came to know of the site</td>
+    <td>string data like 'Momma told me not to come'</td>
+  </tr>
+  <tr> 
+    <td id="info_tag">INFO</td>
+    <td>Any additional info the user wants to provide, like projects, co-workers, 
+      advising professor and so on</td>
+    <td>string data like 'work with Michael Smith et.al.'</td>
+  </tr>
+  <tr> 
+    <td id="cindex_tag"> COMMENT_INDEX</td>
+    <td>A unique integer identifying a comment.</td>
+    <td>99845</td>
+  </tr>
+  <tr> 
+    <td id="date_tag"> DATE</td>
+    <td> date and time of the creation of a comment</td>
+    <td> yyyy-mm-dd hh:mm:ss (2007-07-01 14:12:12)</td>
+  </tr>
+  <tr> 
+    <td id="text_tag"> TEXT</td>
+    <td>The body of the comment.</td>
+    <td>&nbsp; </td>
+  </tr>
+  <tr> 
+    <td id="subject_tag"> SUBJECT</td>
+    <td>A text string that is the subject of a comment.</td>
+    <td>"AMDC2003 comment about format"</td>
+  </tr>
+  <tr> 
+    <td id="ow_tag"> OVERWRITE</td>
+    <td>A flag that allows a user to 'create' a new model with the same name as 
+      an existing model, iff that user <i>owns</i> the model and the model is 
+      <b>not</b> PUBLIC or SHARED.</td>
+    <td>Y or N</td>
+  </tr>
+</table>
+  </body>
+</html>
+

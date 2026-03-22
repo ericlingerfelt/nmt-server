@@ -1,0 +1,442 @@
+<?php
+ /* vim: set filetype=php: */
+/*! \file 
+*
+* \verbatim
+* $Author: bucknerk $
+* $Date: 2008/06/04 17:49:47 $
+*
+* $Log: new_user_reg.html,v $
+* Revision 1.6  2008/06/04 17:49:47  bucknerk
+* fixed/worked at the auth_validate. the function was needlessly duplicated
+* it was called with wrong argument.
+*
+* Revision 1.5  2008/05/28 14:30:30  bucknerk
+* Fixes, updates and repairs
+*
+* Revision 1.4  2008/04/30 13:48:36  bucknerk
+* Changed things so that this can now be used as a testing and online.  The
+* database chosen is based on the directory "mass_model" or "mass_testing".
+*
+* Revision 1.3  2008/04/29 20:00:34  bucknerk
+* minor fixes
+*
+* Revision 1.2  2008/04/22 15:46:46  bucknerk
+* added and fixed a bunch. Registration should now work
+*
+* Revision 1.1  2008/04/22 13:47:10  bucknerk
+* new
+*
+*
+*
+***************************************************************************
+*
+* \endverbatim
+*
+* This handles the registration functions.  It includes entering a new user
+* account, sending a registration email, and setting a basic user directory
+* structure so that we won't get those darn Error 29 messages.
+* It is meant to be purely web-based with no Java interface.
+*
+* \section sreg Included Files
+*
+* The following files are always included:\n
+* error_handler.inc \n
+* information.inc \n
+* admin_functions.inc \n
+* site_admin_registration_handlers.inc \n
+*
+* \section weird Closing Window
+*
+* This generates an odd little piece of html depending on whether the page
+* was accessed using <b>GET</b> or <b>POST</b>. If get was used, the 
+* &lt;body&gt; tag is generated with a call to a javascript function,
+* closeme(), which should close the window.  Otherwise, this tag has calls
+* to do_img_resize() to try to get the 3 images to remain completely
+* viewable no matter the window size.  
+*
+* The first bit of code is designed to redirect the browser to the main 
+* administration page when the DO_EMAIL action comes in.
+* The literature indicates that the script should exit at this time.
+* It also says that the script must not output any html/data before the
+* header() call. 
+*
+* Next is a piece that tells the browser to request a password and username 
+* before allowing the page the proceed. Using the 'realm' means that the browser 
+* saves the password and username so that the next request for the same realm is 
+* answered with the saved pw/username.  FYI these are sent as a single header 
+* object which is base64encode of "username:password" and the colon is required.
+*/
+/****************************************************************************/
+
+/*
+  if(array_key_exists('ADMIN_ACTION',$_POST) &&  
+    $_POST['ADMIN_ACTION']=='DO_EMAIL') 
+    {
+      header('location: mass_admin.html');
+      //DON'T output anything yet, if you do then when the
+      //new form is loaded is an error because of the header.
+      //doing that forces an immediate return.
+      // what the location does is a redirect
+    }
+*/
+  $array= explode('/',$_SERVER['PHP_SELF']); 
+  $ar=$array[count($array)-2];
+  // note that admin_functions includes information.inc
+  include_once("admin_functions.inc");
+  if(($rtn=auth_validate("mass_model")) !== true ) 
+  {
+    // not going to print the errors unless testing
+    // as long as the php is correct all the other errors will
+    // be hidden
+    header('WWW-Authenticate: Basic realm="CINA_ADMIN"');
+    echo "<html><head><title>Not Authorized</title></head><body>";
+    echo "ERROR: 401 Authorization required<br><hr>";
+    echo "</body></html>";
+    exit(1);
+  }
+
+
+
+?>
+
+<!-- DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+     "http://www.w3.org/TR/html4/loose.dtd" -->
+
+<html>
+  <head>
+    <title>MassModel Registration</title>
+    <link rel="stylesheet" type="text/css" href="m_admin.css">
+    <META http-equiv="Content-Script-Type" content="text/javascript">
+    <script src="m_admin.js" type="text/javascript">
+    </script>
+  </head>
+
+<?php
+  //<body>
+  //if( $_SERVER['REQUEST_METHOD'] == "GET") 
+  //  echo '<body onload="closeme()">';
+  //else echo '<body onresize="do_img_resize()" onload="do_img_resize()">'; 
+  echo '<body onresize="do_img_resize()" onload="do_img_resize()">'; 
+?>
+  <table  id="toptable" border="1" align="center">
+  <tr> 
+  <td><img id="i1" src="./doc/dbinfo/nuchart.png"  height="200px"> </td>
+  <!--
+    <td><img id="i1" src="../cina_eval/left.png" > </td>
+    <td><img id="i2" src="../cina_eval/stars.png" > </td>
+    <td><img id="i3" src="../cina_eval/right.png" > </td>
+  -->
+  </tr>
+  </table>
+  <H2 >MassModel Site Administration: New User Registration</H2>
+  <hr><hr>
+  <div >
+    <?php
+
+	/*
+	echo '<div class="nav">';
+	echo '<form action="site_admin_reg_help.php" method="POST">';
+	echo '<input type="submit" value="HELP">';
+	echo '</form>';
+	*/
+     ?>
+    </div>
+
+<?php
+  include_once('admin_functions.inc');
+  include_once('information.inc');
+  include_once('error_handler.inc');
+  //include_once('mass_model_registration_handlers.inc');
+  /// The information I need to manipulate the databases
+  $text_array =& $test_comp;
+  $database_info =& get_db_info('mass_model');
+  if(! $database_info) {
+    $adminerr="Could not get database information for 'mass_model'";
+    trigger_error($adminerr,E_USER_ERROR);
+    return;
+    }
+  /// This array stores all the formatting characters for the output
+  if(! array_key_exists('SECOND',$_POST)) {
+    decode($database_info->password,$database_info->key); 
+    $mylink=mysql_connect('localhost:3306',$database_info ->username ,
+	  $database_info->password);
+    if(! $mylink) {
+      $err="ERROR: COULD NOT CONNECT to MySQL server as ";
+      $err.= $database_info->username . "<br>\n";
+      trigger_error($err,E_USER_ERROR);
+      return;
+      }
+    $rtn=mysql_query("USE $database_info->dbname");
+    if(! $rtn) {
+      $err= "ERROR: USE " . $database_info->dbname ;
+      $err.=" query caused: MYSQL ERROR: " . mysql_error() ;
+      $err.= "<br>\n";
+      trigger_error($err,E_USER_ERROR);
+      mysql_close($mylink);
+      return;
+      }
+      $query_str="SELECT r_index,firstname,lastname,email FROM ";
+      $query_str.="register_requests WHERE complete IS NULL";
+    $rtn=mysql_query($query_str);
+    if(!$rtn) {
+      $adminerr="Sorry, could not access database: ";
+      $adminerr.="MYSQL Error: " . mysql_error();
+      trigger_error($adminerr,E_USER_ERROR);
+      echo '<input type="button" value="Return to Mass Model Admin"';
+      echo ' onclick="adminHome()>' . "<hr>\n";
+      echo "</body></html>";
+      return;
+      }
+
+    echo '<div class="nav">';
+    echo "Please select the new user from the following. ";
+    echo "If none of these match\n<br>";
+    echo "the individual you want to register just select <b>NONE</b> and<br>\n";
+    echo "and you will given a blank form to fill in.<br>\n";
+    echo '</div>';
+    echo '<div class="narrow">';
+    echo '<form name="initial" action="new_user_reg.html" method="POST" ';
+    echo 'enctype="multipart/form-data" "';
+    echo '>' . "\n";
+    echo '<input type="hidden" value="1" name="SECOND">' . "\n";
+    echo '<caption><h4>You Can Select From:</h4></caption>';
+    if(mysql_num_rows($rtn) == 0) {
+      echo '<input type="hidden" value="NONE" name="INDEX">' . "\n";
+      echo "<br>No one available in database to register<br>\n";
+    }
+    else {
+      echo '<br>New User Requests: ';
+      echo '<select  size="1" name="INDEX">' . "\n";
+      $row=mysql_fetch_row($rtn);
+      echo '<option value="NONE">NONE</option>' . "\n";
+      while($row) {
+	echo '<option value="' . $row[0] . '">';
+	echo "{$row[1]} {$row[2]}</option>\n";
+	$row=mysql_fetch_row($rtn);
+      }
+      echo '</select>' . "\n";
+    }
+    echo '<input tabindex="12" type="submit" value="Proceed to Registration">';
+    echo "\n</form>\n";
+    echo '<input type="button" value="Cancel and Return to Mass Model Admin"';
+    echo ' onclick="adminHome()>' . "<hr>\n";
+    echo "</div>";
+  }
+  else {
+    echo '<div class="nav" style="padding: 1em 30%;">';
+    echo 'This is the page used to register a new user. ';
+    echo 'Please input/validate the information in ';
+    echo ' the form below and submit. If registration is successful,';
+    echo ' you can continue and automatically send the new user an email.<br>';
+    echo 'NOTE: Areas of the form outlined in yellow are not required';
+    echo '</div>';
+    echo '<hr><hr>';
+    // output a form for the user to input/validate
+    if(array_key_exists("INDEX",$_POST) && 
+      $_POST["INDEX"]!= 'NONE') {
+      decode($database_info->password,$database_info->key); 
+      $mylink=mysql_connect('localhost:3306',$database_info ->username ,
+	    $database_info->password);
+      if(! $mylink) {
+	$err="ERROR: COULD NOT CONNECT to MySQL server as ";
+	$err.= $database_info->username . "<br>\n";
+	trigger_error($err,E_USER_ERROR);
+	return;
+	}
+      $rtn=mysql_query("USE $database_info->dbname");
+      if(! $rtn) {
+	$err= "ERROR: USE " . $database_info->dbname ;
+	$err.=" query caused: MYSQL ERROR: " . mysql_error() ;
+	$err.= "<br>\n";
+	trigger_error($err,E_USER_ERROR);
+	mysql_close($mylink);
+	return;
+	}
+      $query_str="SELECT * FROM ";
+      $query_str.="register_requests WHERE r_index=" . $_POST['INDEX'];
+      $rtn=mysql_query($query_str);
+      if(!$rtn) {
+	$adminerr="Sorry, could not access database: ";
+	$adminerr.="MYSQL Error: " . mysql_error();
+	trigger_error($adminerr,E_USER_ERROR);
+	}
+      $row=mysql_fetch_assoc($rtn);
+      if(!$row) {
+	$adminerr="Sorry, could not access database: ";
+	$adminerr.="MYSQL Error: " . mysql_error();
+	trigger_error($adminerr,E_USER_ERROR);
+	}
+    }
+    echo '<div class="norm">';
+    /*
+    * the site registration form.  This allows a choice of database
+    * the the user enters all the required info, on submission a javascript
+    * will do a quick and dirty validation, bounce the passwords and then 
+    * mangle them if they are the same.
+    */
+    echo '<form name="register" action="prep_to_send.php" method="POST"';
+    echo ' enctype="multipart/form-data" ';
+    echo 'onsubmit="return reg_checkscript();">'. "\n";
+    echo '<input type="hidden" value="REGISTER" name="ADMIN_ACTION">'. "\n";
+    echo '<input type="hidden" value="" name="ENCODE">'. "\n";
+    echo '<input type="hidden" value="some value" name="DUMMY">'. "\n";
+    if(array_key_exists("INDEX",$_POST) && 
+      $_POST["INDEX"]!= 'NONE') {
+      echo '<input type="hidden" value="' . $_POST['INDEX'] . '" ';
+      echo 'name="REG_INDEX">'. "\n";
+      }
+    echo '<table width="900" border="10">';
+    echo '<caption>';
+    echo '<h3>Register New User</h3>'. "\n";
+    echo '</caption>';
+
+    echo '<tr>';
+    echo '<td class="blank">FULL NAME: </td>';
+    echo '<td class="blank">';
+    echo '<input tabindex="1" type="text" name="NAME" size="30"';
+    if(isset($row)) {
+    echo 'value="' . $row['firstname'] . " " . $row['lastname'] . '"';
+    }
+    echo ' class="req">' . "\n";
+    echo '</td>';
+    echo '<td rowspan="3" class="blank">ADDRESS:</td>';
+    echo '<td rowspan="3" class="blank">';
+    echo '<textarea tabindex="8" rows="4" cols="40" name="ADDRESS"';
+    echo ' class="req">';
+    if(isset($row)) {
+      echo $row['address'];
+    }
+    echo '</textarea></td>'. "\n";
+    echo '</tr>';
+
+    echo '<tr>';
+    echo '<td class="blank">USERNAME: </td>';
+    echo '<td class="blank">';
+    echo '<input tabindex="2" type="text" name="USERNAME" class="req">';
+    echo " (must be 4 or more characters)\n";
+    echo '</td>';
+    echo '</tr>';
+
+    echo '<tr>';
+    echo '<td class="blank">EMAIL: </td>';
+    echo '<td class="blank">';
+    echo '<input tabindex="3" type="text" size="40" name="EMAIL"';
+    if(isset($row)) {
+      echo 'value="' . $row['email'] . '"';
+    }
+    echo ' class="req">'. "\n";
+    echo '</td>';
+
+    echo '<tr>';
+    echo '<td class="blank">INSTITUTION: </td>';
+    echo '<td class="blank">';
+    echo '<input tabindex="4" type="text" name="INSTITUTION" size="40"';
+    if(isset($row)) {
+      echo 'value="' . $row['institution'] . '"';
+    }
+    echo ' class="req">'. "\n";
+    echo '</td>';
+    echo '<td rowspan="3" class="blank">RESEARCH: </td>';
+    echo '<td rowspan="3" class="blank">';
+    echo '<textarea tabindex="9" rows="4" cols="40" name="RESEARCH"';
+    echo ' class="noreq">';
+    if(isset($row)) {
+      echo $row['research'];
+    }
+    echo '</textarea></td>'. "\n";
+    echo '</tr>';
+
+    echo '<tr>';
+    echo '<td class="blank">COUNTRY: </td>';
+    echo '<td class="blank">';
+    include('country.inc');
+    $codes=array();
+    get_country_codes($codes);
+    if($codes===false) {
+      echo "Return from get_country_codes() is '$codes'\n";
+      return;
+      }
+    //print_r($codes);
+    //echo "<br> was returned from get_country_codes<br>";
+    //echo '<input tabindex="5" type="text" name="COUNTRY" ';
+    echo '<label for="country">';
+    if(isset($row)) {
+      echo "The User entered: '{$row['country']}'.\n";
+    }
+    else {
+      echo "There was no entry from user. \n";
+    }
+    echo "<br>Please select the best valid code from this list<br>\n";
+    echo "</label>";
+    echo '<select id="country" tabindex="5" size="5" name="COUNTRY">' ;
+    foreach($codes as $key => $val) {
+      echo '<option value="' . $val . '">';
+      echo $key . "($val)</option>\n";
+      }
+    echo '</select>';
+    echo '</td>';
+
+    echo '<tr>';
+    echo '<td class="blank">PASSWORD: </td>';
+    echo '<td class="blank">';
+    echo '<input tabindex="6" type="password" name="PW1" class="req">'. "\n";
+    echo '</td>';
+    echo '</tr>';
+
+    echo '<tr>';
+    echo '<td class="blank">PASSWORD (again): </td>';
+    echo '<td class="blank">';
+    echo '<input tabindex="7" type="password" name="PW2"  class="req">'. "\n";
+    echo '</td>';
+    echo '<td rowspan="2" class="blank">INFORMATION: </td>';
+    echo '<td rowspan="2" class="blank">';
+    echo '<textarea tabindex="10" rows="2" cols="40" name="INFORMATION"';
+    echo ' class="noreq">';
+    if(isset($row)) {
+      echo $row['info'];
+    }
+    echo '</textarea></td>'. "\n";
+    echo '</tr>';
+
+    echo '<tr>';
+    echo '<td class="blank" colspan="2">';
+    echo 'Use this link to choose a lower-case UCAMS password:';
+    echo '<a href="https://ucams.ornl.gov/cgi-bin/cgiwrap/ucams';
+    echo '/genpw/ucamgen.cgi?page=INTRO" target="_blank">UCAMS</a>';
+    echo '</td>';
+    echo '</tr>';
+    echo '<tr>';
+    echo '<td class="blank" colspan="2" >';
+    echo " Passwords must be at least 8 characters long.";
+    echo '</td>';
+    echo '<td rowspan="2" class="blank">HEAR of SUITE: </td>';
+    echo '<td rowspan="2" class="blank">';
+    echo '<textarea tabindex="11" rows="2" cols="40" name="HEAR"';
+    echo ' class="noreq">';
+    if(isset($row)) {
+      echo $row['hearof'];
+    }
+    echo '</textarea></td>'. "\n";
+    echo '</tr>';
+
+
+    echo '<tr>';
+    echo '<td class="blank" align="center" >';
+    echo '<input tabindex="12" type="submit" value="Submit Registration">';
+    echo '</td><td align="center" class="blank">';
+    echo '<input  type="reset" >'. "\n";
+    echo '</td>';
+    echo '</tr>';
+
+
+    echo '</table>';
+    echo '</form>'. "\n";
+    echo "<hr><hr><hr>\n";
+    }
+
+
+?>
+  </body>
+</html>
+

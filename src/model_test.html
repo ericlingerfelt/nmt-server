@@ -1,0 +1,221 @@
+<?php
+  /* vim: set filetype=php: */
+  header('Cache-Control: no-cache, no-store, must-revalidate'); //HTTP/1.1
+  header('Expires: Thur, 01 Jan 1970 00:00:01 GMT');
+  header('Pragma: no-cache'); //HTTP/1.0 
+?>
+<html>
+  <head>
+    <title>TESTING for the Mass Model Suite</title>
+    <script type="text/javascript">
+    function submit() 
+    {
+      document.forms[0].submit();
+    }
+    function changeAction()
+    {
+    var myform=document.getElementById("main_form");
+    //alert("Original action: " + x.action);
+    var field=document.getElementById("main_action");
+    if(field.value == "GET_ID") {
+      myform.action="mtest_pw.php";
+      }
+    myform.submit();
+    return true;
+    }
+    </script>
+  </head>
+  <body>
+    <h1>QUERY ENTRY</h1>
+    Please enter the parameters you need.
+    <p>
+    <p>
+    
+    <?php
+      if(array_key_exists("ACTION",$_POST)) {
+	echo '<form id="main_form" action="mass_main.php"';
+	echo ' method="POST" >';
+	echo '<input id="main_action" type="hidden" name="ACTION" value="';
+	echo $_POST['ACTION'] . '">';
+	echo '<br>TESTING:';
+	echo '<SELECT size="1" name="TESTING">';
+	echo '<option value="1" selected>TRUE</option> ';
+	echo '<option value="0">FALSE</option> ';
+	echo '</SELECT>';
+	switch($_POST['ACTION']) {
+	  case "GET_ID":
+	    echo '<br>USER: <input type="text" name="USER"> ';
+	    echo '<br>PWD:&nbsp; <input type="password" name="PASSWORD"> ';
+	    echo '<br><input type="button" value="Submit" ';
+	    echo 'onclick="changeAction()">';
+	    echo '<input type="reset" value="Reset data">';
+	    break;
+	  case "LOGOUT":
+	    echo '<br>SESSION ID: (always required)';
+	    echo ' <INPUT type="text" name="ID"' ;
+	    echo 'value="a_fake_session">';
+	    echo '<br><input type="submit" value="LOGOUT">';
+	    break;
+	  case "CREATE_MODEL":
+	    echo '<br>SESSION ID: (always required)';
+	    echo '<label for="ci">Session ID: </label>';
+	    echo '<INPUT id="c1" type="text" name="ID" ';
+	    echo 'value="a_fake_session"><br>';
+	    echo '<label for="c2"> Model Name: </label>';
+	    echo ' <INPUT id="c2" type="text" name="MODEL_NAME"><br>' ;
+	    echo '<label for="c3" >Reference: </label>';
+	    echo ' <INPUT id="c3" type="text" name="REFERENCE"><br>' ;
+	    echo '<label for="c4" >Description: </label>';
+	    echo ' <INPUT id="c4" type="text" name="DESCRIPTION"><br>' ;
+	    echo '<label for="c5" >Author:</label>';
+	    echo ' <INPUT id="c5" type="text" name="AUTHOR"><br>' ;
+	    echo '<label for="c8" >Overwrite:</label>';
+	    echo ' <select id="c8" name="OVERWRITE" size="1">' ;
+	    echo '<option value="N">No</option>';
+	    echo '<option value="Y">Yes</option>';
+	    echo '</select><br>';
+	    echo '<label for="c6" >Field:</label>';
+	    echo ' <select id="c6" name="FIELD" size="1">' ;
+	    echo '<option value="THEORY">Theory</option>';
+	    echo '<option value="EXPERIMENT">Experimental</option>';
+	    echo '</select><br>';
+	    echo '<label for="c9" >Format:</label>';
+	    echo ' <select id="c9" name="FORMAT" size="1">' ;
+	    echo '<option>ZNV</option>';
+	    echo '<option>ZAV</option>';
+	    echo '</select><br>';
+	    echo '<label for="c7" >Mass Data:</label>';
+	    echo ' <textarea id="c7" rows="20" cols="30" name="DATA">' ;
+	    echo '</textarea>';
+	    echo '<br><input type="submit" value="Submit">';
+	    echo '<input type="reset" value="Reset data">';
+	    break;
+	  case "GET_MODELS":
+	    echo '<br>SESSION ID: (always required)';
+	    echo '<label for="g1">Session ID: </label>';
+	    echo '<INPUT id="g1" type="text" name="ID" ';
+	    echo 'value="a_fake_session"><br>';
+	    echo '<label for="g2"> Type: </label>';
+	    echo '<select id="g2"  name="TYPE" size=1>' ;
+	    echo '<option value="USER">User</option>';
+	    echo '<option value="SHARED">Shared</option>';
+	    echo '<option value="PUBLIC">Public</option>';
+	    echo '<option value="ALL">All</option>';
+	    echo '</select>' ;
+	    echo '<br><input type="submit" value="Submit">';
+	    echo '<input type="reset" value="Reset data">';
+	    break;
+	  case "GET_MODEL_DATA":
+	    echo '<br>SESSION ID: (always required)';
+	    echo '<label for="gd1">Session ID: </label>';
+	    echo '<INPUT id="gd1" type="text" name="ID" ';
+	    echo 'value="a_fake_session"><br>';
+	    echo '<label for="gd2"> Indices: </label>';
+	    echo '<input type="text" id="gd2"  name="MODEL_INDICES" >' ;
+	    echo '<br><input type="submit" value="Submit">';
+	    echo '<input type="reset" value="Reset data">';
+	    break;
+	  case "MERGE_MODELS":
+	    echo '<br>SESSION ID: (always required)';
+	    echo '<label for="mm1">Session ID: </label>';
+	    echo '<INPUT id="mm1" type="text" name="ID" ';
+	    echo 'value="a_fake_session"><br>';
+	    echo '<label for="mm2"> New Model Name: </label>';
+	    echo ' <INPUT id="mm2" type="text" name="MODEL_NAME"><br>' ;
+	    echo '<label for="mm3"> Indices: </label>';
+	    echo '<label for="mm4" >Overwrite:</label>';
+	    echo ' <select id="mm4" name="OVERWRITE" size="1">' ;
+	    echo '<option value="N">No</option>';
+	    echo '<option value="Y">Yes</option>';
+	    echo '</select><br>';
+	    echo '<input type="text" id="mm3"  name="MODEL_INDICES" >' ;
+	    echo '<br><input type="submit" value="Submit">';
+	    echo '<input type="reset" value="Reset data">';
+	    break;
+	  case "GET_MODEL_INFO":
+	    echo '<br>SESSION ID: (always required)';
+	    echo '<label for="gi1">Session ID: </label>';
+	    echo '<INPUT id="gi1" type="text" name="ID" ';
+	    echo 'value="a_fake_session"><br>';
+	    echo '<label for="gi2"> Indices: </label>';
+	    echo '<input type="text" id="gi2"  name="MODEL_INDICES" >' ;
+	    echo '<br><input type="submit" value="Submit">';
+	    echo '<input type="reset" value="Reset data">';
+	    break;
+	  case "ERASE_MODEL":
+	    echo '<br>SESSION ID: (always required)';
+	    echo '<label for="e1">Session ID: </label>';
+	    echo '<INPUT id="e1" type="text" name="ID" ';
+	    echo 'value="a_fake_session"><br>';
+	    echo '<label for="e2"> MODEL_INDEX: </label>';
+	    echo '<input type="text" id="e2"  name="MODEL_INDEX" >' ;
+	    echo '<br><input type="submit" value="Submit">';
+	    echo '<input type="reset" value="Reset data">';
+	    break;
+	  case "COPY_MODEL_TO_SHARED":
+	    echo '<br>SESSION ID: (always required)';
+	    echo '<label for="cp1">Session ID: </label>';
+	    echo '<INPUT id="cp1" type="text" name="ID" ';
+	    echo 'value="a_fake_session"><br>';
+	    echo '<label for="cp2"> MODEL_INDEX: </label>';
+	    echo '<input type="text" id="cp2"  name="MODEL_INDEX" >' ;
+	    echo '<br><input type="submit" value="Submit">';
+	    echo '<input type="reset" value="Reset data">';
+	    break;
+	  case "REGISTER_USER":
+	    //echo '<br>SESSION ID: (always required)';
+	    //echo '<label for="cp1">Session ID: </label>';
+	    //echo '<INPUT id="cp1" type="text" name="ID" ';
+	    //echo 'value="a_fake_session"><br>';
+	    echo '<label for="reg1"> First Name: </label>';
+	    echo '<input type="text" id="reg1"  name="FIRST_NAME" ><br>' ;
+	    echo '<label for="reg2"> Last Name: </label>';
+	    echo '<input type="text" id="reg2"  name="LAST_NAME" ><br>' ;
+	    echo '<label for="reg3"> Email: </label>';
+	    echo '<input type="text" id="reg3"  name="EMAIL" ><br>' ;
+	    echo '<label for="reg4"> Country: </label>';
+	    echo '<input type="text" id="reg4"  name="COUNTRY" ><br>' ;
+	    echo '<label for="reg5"> Institution: </label>';
+	    echo '<input type="text" id="reg5"  name="INSTITUTION" ><br>' ;
+	    echo '<label for="reg6"> Address: </label>';
+	    echo '<input type="text" id="reg6"  name="ADDRESS" ><br>' ;
+	    echo '<label for="reg7"> Research: </label>';
+	    echo '<input type="text" id="reg7"  name="RESEARCH" ><br>' ;
+	    echo '<label for="reg8"> Info: </label>';
+	    echo '<input type="text" id="reg8"  name="INFO" ><br>' ;
+	    echo '<label for="reg9"> Hear about us: </label>';
+	    echo '<input type="text" id="reg9"  name="HEAR_OF_US" ><br>' ;
+	    echo '<br><input type="submit" value="Submit">';
+	    echo '<input type="reset" value="Reset data">';
+	    break;
+	  default:
+	}
+	echo "</form>";
+	echo "</body></html>";
+      }
+      else {
+	echo '<form action="model_test.html" method="POST" >';
+	echo '<br> Select an ACTION to test: '; 
+	echo '<select size="1" name="ACTION" onchange="submit()">';
+	echo '<option selected value="">&nbsp</option>';
+	echo '<option>GET_ID</option>';
+	echo '<option>LOGOUT</option>';
+	echo '<option>CREATE_MODEL</option>';
+	echo '<option>MERGE_MODELS</option>';
+	echo '<option>COPY_MODEL_TO_SHARED</option>';
+	echo '<option>GET_MODELS</option>';
+	echo '<option>GET_MODEL_DATA</option>';
+	echo '<option>GET_MODEL_INFO</option>';
+	echo '<option>ERASE_MODEL</option>';
+	echo '<option>REGISTER_USER</option>';
+	echo '</select>';
+	echo '<input type="reset" value="Clear">';
+	echo '</form>';
+	echo "</body></html>";
+      }
+?>
+    <p>
+  </body>
+</html>
+
+
